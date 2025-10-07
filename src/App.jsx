@@ -10,6 +10,7 @@ function App() {
   const [darkMode, setDarkMode] = useState(true);
   const [toast, setToast] = useState("");
   const [confirmDelete, setConfirmDelete] = useState({ show: false, index: null });
+  const [copiedIndex, setCopiedIndex] = useState(null); // 👈 Para el icono de "copiado"
 
   // Cargar configuración inicial
   useEffect(() => {
@@ -87,10 +88,12 @@ function App() {
     }
   };
 
-  const handleCopy = async (text) => {
+  const handleCopy = async (text, index) => {
     try {
       await navigator.clipboard.writeText(text);
+      setCopiedIndex(index);
       showToast("Contraseña copiada");
+      setTimeout(() => setCopiedIndex(null), 1500);
     } catch {
       showToast("Error al copiar contraseña");
     }
@@ -99,9 +102,7 @@ function App() {
   return (
     <main
       className={`min-h-screen flex flex-col items-center p-8 transition-colors duration-300 ${
-        darkMode
-          ? "bg-[#0e1217] text-gray-200"
-          : "bg-gray-50 text-gray-800"
+        darkMode ? "bg-[#0e1217] text-gray-200" : "bg-gray-50 text-gray-800"
       } font-sans`}
     >
       <div className="w-full max-w-3xl space-y-8">
@@ -145,14 +146,10 @@ function App() {
         {/* Lista */}
         <div
           className={`rounded-2xl p-6 border transition ${
-            darkMode
-              ? "bg-[#161b22] border-gray-800"
-              : "bg-white border-gray-200"
+            darkMode ? "bg-[#161b22] border-gray-800" : "bg-white border-gray-200"
           }`}
         >
-          <h2 className="text-sm font-medium mb-4 opacity-70">
-            Servidores guardados
-          </h2>
+          <h2 className="text-sm font-medium mb-4 opacity-70">Servidores guardados</h2>
 
           {servers.length === 0 ? (
             <p className="text-center text-gray-400 py-6 text-sm">
@@ -181,18 +178,29 @@ function App() {
                     >
                       Conectar
                     </button>
+
                     <button
-                      onClick={() => handleCopy(srv.pass)}
-                      className="text-xs px-3 py-1 border border-transparent bg-gray-600 hover:bg-gray-700 text-white rounded-md"
+                      onClick={() => handleCopy(srv.pass, i)}
+                      className="text-xs px-3 py-1 border border-transparent bg-gray-600 hover:bg-gray-700 text-white rounded-md flex items-center gap-1"
                     >
-                      Copiar
+                      {copiedIndex === i ? (
+                        <>
+                          ✓ <span className="text-[11px]">Copiado</span>
+                        </>
+                      ) : (
+                        <>
+                          📋 <span className="text-[11px]">Copiar</span>
+                        </>
+                      )}
                     </button>
+
                     <button
                       onClick={() => handleEdit(srv, i)}
                       className="text-xs px-3 py-1 border border-transparent bg-slate-600 hover:bg-slate-700 text-white rounded-md"
                     >
                       Editar
                     </button>
+
                     <button
                       onClick={() => setConfirmDelete({ show: true, index: i })}
                       className="text-xs px-3 py-1 border border-transparent bg-red-600 hover:bg-red-700 text-white rounded-md"
