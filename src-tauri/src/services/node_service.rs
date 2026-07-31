@@ -88,16 +88,23 @@ impl NodeService {
 
         let mut vault = VaultService::load(app)?;
 
-        Self::delete_recursive(&mut vault.nodes, &id);
+        // Recolectamos TODOS los ids que van a borrarse (el nodo + toda su descendencia)
+        // para poder limpiar también los items que cuelgan de las subcarpetas.
+        let mut deleted_ids: Vec<String> = vec![id.clone()];
 
-        vault.items.retain(|i| i.node_id != id);
+        Self::collect_descendants(&vault.nodes, &id, &mut deleted_ids);
+
+        vault.nodes.retain(|n| !deleted_ids.contains(&n.id));
+
+        vault.items.retain(|i| !deleted_ids.contains(&i.node_id));
 
         VaultService::save(app, &vault)
     }
 
-    fn delete_recursive(
-        nodes: &mut Vec<Node>,
+    fn collect_descendants(
+        nodes: &[Node],
         id: &str,
+        acc: &mut Vec<String>,
     ) {
         let children: Vec<String> = nodes
             .iter()
@@ -106,10 +113,9 @@ impl NodeService {
             .collect();
 
         for child in children {
-            Self::delete_recursive(nodes, &child);
+            acc.push(child.clone());
+            Self::collect_descendants(nodes, &child, acc);
         }
-
-        nodes.retain(|n| n.id != id);
     }
 
     pub fn move_node(
