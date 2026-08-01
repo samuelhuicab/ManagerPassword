@@ -201,11 +201,11 @@ export default function FieldEditor({
 
                             ?
 
-                                <EyeOff size={18}/>
+                                <EyeOff size={18} className="text-zinc-400"/>
 
                             :
 
-                                <Eye size={18}/>
+                                <Eye size={18} className="text-zinc-400"/>
 
                         }
 
@@ -235,11 +235,11 @@ export default function FieldEditor({
 
                         ?
 
-                            <Check size={18}/>
+                            <Check size={18} className="text-zinc-400"/>
 
                         :
 
-                            <Copy size={18}/>
+                            <Copy size={18} className="text-zinc-400"/>
 
                     }
 

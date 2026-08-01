@@ -17,22 +17,22 @@ function getIcon(type) {
     switch (type) {
 
         case "Server":
-            return <Server size={18} />;
+            return <Server size={18} className="text-zinc-400" />;
 
         case "Database":
-            return <Database size={18} />;
+            return <Database size={18} className="text-zinc-400"/>;
 
         case "Email":
-            return <Mail size={18} />;
+            return <Mail size={18} className="text-zinc-400"/>;
 
         case "Website":
-            return <Globe size={18} />;
+            return <Globe size={18} className="text-zinc-400"/>;
 
         case "License":
-            return <KeyRound size={18} />;
+            return <KeyRound size={18} className="text-zinc-400"/>;
 
         default:
-            return <FileText size={18} />;
+            return <FileText size={18} className="text-zinc-400"/>;
 
     }
 
@@ -151,7 +151,7 @@ export default function ItemList() {
 
                 >
 
-                    <Plus size={18} />
+                    <Plus size={18} className="text-zinc-400"/>
 
                 </button>
 

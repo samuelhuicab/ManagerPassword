@@ -98,7 +98,7 @@ export default function Sidebar() {
 
                 >
 
-                    <Plus size={16}/>
+                    <Plus size={16} className="text-zinc-400"/>
 
                 </button>
 

@@ -157,11 +157,11 @@ export default function TreeNode({
 
                     ?
 
-                        <FolderOpen size={17} className="shrink-0"/>
+                        <FolderOpen size={17} className="shrink-0 text-zinc-400"/>
 
                     :
 
-                        <Folder size={17} className="shrink-0"/>
+                        <Folder size={17} className="shrink-0 text-zinc-400"/>
 
                 }
 
@@ -209,7 +209,7 @@ export default function TreeNode({
 
                 >
 
-                    <Trash2 size={14}/>
+                    <Trash2 size={14} className="text-zinc-400"/>
 
                 </button>
 
