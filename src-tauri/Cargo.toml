@@ -1,6 +1,6 @@
 [package]
 name = "passcontroller"
-version = "1.2.1"
+version = "2.3.10"
 description = "Aplicación para que puedas almacenar tus contraseñas del servidor y asi no las pierdas en ningun momento."
 authors = ["Samuel Huicab Pastrana"]
 edition = "2021"
