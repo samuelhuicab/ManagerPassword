@@ -1,3 +1,5 @@
+import { FolderOpen } from "lucide-react";
+
 import useVault from "../../hooks/useVault";
 
 import ItemList from "../item/ItemList";
@@ -15,17 +17,51 @@ export default function MainPanel() {
 
             <main className="flex-1 bg-zinc-950 flex items-center justify-center">
 
-                <div className="text-center">
+                <div className="text-center max-w-xs">
 
-                    <h2 className="text-2xl font-semibold text-white">
+                    <div
 
-                        Password Manager
+                        className="
+
+                            w-14
+
+                            h-14
+
+                            rounded-xl
+
+                            bg-zinc-900
+
+                            border
+
+                            border-zinc-800
+
+                            flex
+
+                            items-center
+
+                            justify-center
+
+                            mx-auto
+
+                            text-zinc-600
+
+                        "
+
+                    >
+
+                        <FolderOpen size={24} />
+
+                    </div>
+
+                    <h2 className="mt-4 text-lg font-semibold text-white">
+
+                        Ninguna carpeta seleccionada
 
                     </h2>
 
-                    <p className="mt-3 text-zinc-500">
+                    <p className="mt-2 text-sm text-zinc-500">
 
-                        Selecciona una carpeta para comenzar.
+                        Elegí una carpeta en el panel izquierdo para ver sus elementos.
 
                     </p>
 

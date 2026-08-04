@@ -121,3 +121,10 @@ export async function search(query) {
         query,
     });
 }
+
+export async function openSsh(ip, user) {
+    return await invoke("open_ssh", {
+        ip,
+        user,
+    });
+}

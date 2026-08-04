@@ -35,14 +35,17 @@ export default function Input({
 
                 className="
                     w-full
+                    h-11
                     bg-zinc-900
                     border
                     border-zinc-800
                     rounded-lg
                     px-4
-                    py-3
+                    text-sm
                     text-white
                     outline-none
+                    transition-colors
+                    placeholder:text-zinc-600
                     focus:border-blue-500
                 "
 

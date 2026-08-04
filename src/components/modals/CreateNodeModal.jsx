@@ -8,6 +8,11 @@ import useVault from "../../hooks/useVault";
 
 const NODE_TYPES = ["Folder", "Category"];
 
+const NODE_TYPE_LABEL = {
+    Folder: "Carpeta",
+    Category: "Categoría",
+};
+
 export default function CreateNodeModal() {
 
     const {
@@ -97,14 +102,16 @@ export default function CreateNodeModal() {
 
                     className="
                         w-full
+                        h-11
                         bg-zinc-900
                         border
                         border-zinc-800
                         rounded-lg
                         px-4
-                        py-3
+                        text-sm
                         text-white
                         outline-none
+                        transition-colors
                         focus:border-blue-500
                     "
 
@@ -116,7 +123,7 @@ export default function CreateNodeModal() {
 
                             <option key={t} value={t}>
 
-                                {t}
+                                {NODE_TYPE_LABEL[t]}
 
                             </option>
 

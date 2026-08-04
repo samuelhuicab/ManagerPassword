@@ -1,13 +1,19 @@
-import { Save, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+
+import { Save, Trash2, Terminal, FileText } from "lucide-react";
 
 import useVault from "../../hooks/useVault";
 
 import FieldEditor from "./FieldEditor";
 
+import { getTypeIcon, getTypeLabel } from "../../constants/itemTypes";
+
 import {
     updateItemTitle,
     updateItemNotes,
+    updateItemField,
     deleteItem,
+    openSsh,
 } from "../../services/vault";
 
 export default function ItemEditor() {
@@ -21,23 +27,93 @@ export default function ItemEditor() {
 
     } = useVault();
 
-    if (!selectedItem) {
+    const [draft, setDraft] = useState(null);
+
+    const [saving, setSaving] = useState(false);
+
+    const [dirty, setDirty] = useState(false);
+
+    const [connecting, setConnecting] = useState(false);
+
+    // Sincroniza el borrador SOLO cuando cambia el item seleccionado
+    // (no en cada render), para no pisar lo que el usuario está escribiendo.
+    useEffect(() => {
+
+        if (!selectedItem) {
+
+            setDraft(null);
+
+            setDirty(false);
+
+            return;
+
+        }
+
+        setDraft({
+
+            title: selectedItem.title,
+
+            notes: selectedItem.notes,
+
+            fields: selectedItem.fields.map(f => ({ ...f })),
+
+        });
+
+        setDirty(false);
+
+    }, [selectedItem?.id]);
+
+    if (!selectedItem || !draft) {
 
         return (
 
             <section className="flex-1 bg-zinc-950 flex items-center justify-center">
 
-                <div className="text-center">
+                <div className="text-center max-w-xs">
 
-                    <h2 className="text-white text-xl">
+                    <div
 
-                        Selecciona un elemento
+                        className="
+
+                            w-14
+
+                            h-14
+
+                            rounded-xl
+
+                            bg-zinc-900
+
+                            border
+
+                            border-zinc-800
+
+                            flex
+
+                            items-center
+
+                            justify-center
+
+                            mx-auto
+
+                            text-zinc-600
+
+                        "
+
+                    >
+
+                        <FileText size={24} />
+
+                    </div>
+
+                    <h2 className="mt-4 text-lg font-semibold text-white">
+
+                        Ningún elemento seleccionado
 
                     </h2>
 
-                    <p className="text-zinc-500 mt-2">
+                    <p className="mt-2 text-sm text-zinc-500">
 
-                        Aquí aparecerá toda la información.
+                        Elegí un elemento de la lista para ver y editar su información.
 
                     </p>
 
@@ -49,43 +125,109 @@ export default function ItemEditor() {
 
     }
 
-    async function changeTitle(value) {
+    function getFieldValue(key) {
 
-        setSelectedItem({
-
-            ...selectedItem,
-
-            title: value,
-
-        });
-
-        await updateItemTitle(
-
-            selectedItem.id,
-
-            value,
-
-        );
+        return draft.fields.find(f => f.key === key)?.value || "";
 
     }
 
-    async function changeNotes(value) {
+    function changeTitle(value) {
 
-        setSelectedItem({
+        setDraft({ ...draft, title: value });
 
-            ...selectedItem,
+        setDirty(true);
 
-            notes: value,
+    }
+
+    function changeNotes(value) {
+
+        setDraft({ ...draft, notes: value });
+
+        setDirty(true);
+
+    }
+
+    function changeField(fieldId, value) {
+
+        setDraft({
+
+            ...draft,
+
+            fields: draft.fields.map(f =>
+
+                f.id === fieldId ? { ...f, value } : f
+
+            ),
 
         });
 
-        await updateItemNotes(
+        setDirty(true);
 
-            selectedItem.id,
+    }
 
-            value,
+    async function handleSave() {
 
-        );
+        setSaving(true);
+
+        try {
+
+            const titleChanged = draft.title !== selectedItem.title;
+
+            const notesChanged = draft.notes !== selectedItem.notes;
+
+            const changedFields = draft.fields.filter(df => {
+
+                const original = selectedItem.fields.find(f => f.id === df.id);
+
+                return original && original.value !== df.value;
+
+            });
+
+            if (titleChanged) {
+
+                await updateItemTitle(selectedItem.id, draft.title);
+
+            }
+
+            if (notesChanged) {
+
+                await updateItemNotes(selectedItem.id, draft.notes);
+
+            }
+
+            for (const field of changedFields) {
+
+                await updateItemField(selectedItem.id, field.key, field.value);
+
+            }
+
+            const updatedItem = {
+
+                ...selectedItem,
+
+                title: draft.title,
+
+                notes: draft.notes,
+
+                fields: draft.fields,
+
+            };
+
+            setSelectedItem(updatedItem);
+
+            setDirty(false);
+
+            if (selectedNode) {
+
+                await loadItems(selectedNode.id);
+
+            }
+
+        } finally {
+
+            setSaving(false);
+
+        }
 
     }
 
@@ -105,6 +247,54 @@ export default function ItemEditor() {
         }
 
     }
+
+    async function handleConnectSsh() {
+
+        const host = getFieldValue("host");
+
+        const username = getFieldValue("username");
+
+        if (!host || !username) {
+
+            alert("Completá 'Host' y 'Usuario' antes de conectar.");
+
+            return;
+
+        }
+
+        if (dirty) {
+
+            const proceed = confirm(
+
+                "Tenés cambios sin guardar. Se va a conectar con los valores actuales en pantalla, pero no se guardarán. ¿Continuar?"
+
+            );
+
+            if (!proceed) return;
+
+        }
+
+        setConnecting(true);
+
+        try {
+
+            await openSsh(host, username);
+
+        } catch (err) {
+
+            alert(`No se pudo abrir la conexión SSH: ${err}`);
+
+        } finally {
+
+            setConnecting(false);
+
+        }
+
+    }
+
+    const isServer = selectedItem.item_type === "Server";
+
+    const TypeIcon = getTypeIcon(selectedItem.item_type);
 
     return (
 
@@ -126,163 +316,309 @@ export default function ItemEditor() {
 
                 className="
 
-                    h-14
-
                     border-b
 
                     border-zinc-800
 
-                    flex
+                    px-8
 
-                    items-center
-
-                    justify-between
-
-                    px-6
+                    py-5
 
                 "
 
             >
 
-                <h2
+                <div className="flex items-start justify-between gap-6">
 
-                    className="
+                    <div className="flex items-start gap-3 min-w-0">
 
-                        text-lg
+                        <div
 
-                        font-semibold
+                            className="
 
-                        text-white
+                                w-10
 
-                    "
+                                h-10
 
-                >
+                                rounded-lg
 
-                    {selectedItem.item_type}
+                                bg-zinc-900
 
-                </h2>
+                                border
 
-                <div className="flex items-center gap-4">
+                                border-zinc-800
 
-                    <div
+                                flex
 
-                        className="
+                                items-center
 
-                            flex
+                                justify-center
 
-                            items-center
+                                shrink-0
 
-                            gap-2
+                                mt-0.5
 
-                            text-green-500
+                                text-zinc-400
 
-                            text-sm
+                            "
 
-                        "
+                        >
 
-                    >
+                            <TypeIcon size={18} />
 
-                        <Save size={16} />
+                        </div>
 
-                        Auto Save
+                        <div className="min-w-0">
+
+                            <input
+
+                                value={draft.title}
+
+                                onChange={(e) => changeTitle(e.target.value)}
+
+                                placeholder="Sin título"
+
+                                className="
+
+                                    block
+
+                                    w-full
+
+                                    bg-transparent
+
+                                    text-xl
+
+                                    font-semibold
+
+                                    text-white
+
+                                    outline-none
+
+                                    placeholder:text-zinc-600
+
+                                "
+
+                            />
+
+                            <div
+
+                                className="
+
+                                    flex
+
+                                    items-center
+
+                                    gap-2
+
+                                    mt-1
+
+                                    text-xs
+
+                                    text-zinc-500
+
+                                "
+
+                            >
+
+                                <span>
+
+                                    {getTypeLabel(selectedItem.item_type)}
+
+                                </span>
+
+                                {
+
+                                    dirty &&
+
+                                    <>
+
+                                        <span className="text-zinc-700">•</span>
+
+                                        <span className="text-amber-500 flex items-center gap-1">
+
+                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+
+                                            Sin guardar
+
+                                        </span>
+
+                                    </>
+
+                                }
+
+                            </div>
+
+                        </div>
 
                     </div>
 
-                    <button
+                    <div className="flex items-center gap-2 shrink-0">
 
-                        onClick={handleDelete}
+                        {
 
-                        className="
+                            isServer &&
 
-                            flex
+                            <button
 
-                            items-center
+                                onClick={handleConnectSsh}
 
-                            gap-2
+                                disabled={connecting}
 
-                            text-sm
+                                title="Conectar por SSH"
 
-                            text-zinc-400
+                                className="
 
-                            hover:text-red-500
+                                    flex
 
-                            px-3
+                                    items-center
 
-                            py-2
+                                    gap-2
 
-                            rounded-lg
+                                    text-sm
 
-                            hover:bg-zinc-900
+                                    font-medium
 
-                            transition
+                                    h-10
 
-                        "
+                                    px-4
 
-                    >
+                                    rounded-lg
 
-                        <Trash2 size={16} />
+                                    transition
 
-                        Eliminar
+                                    disabled:opacity-40
 
-                    </button>
+                                    disabled:cursor-not-allowed
+
+                                    bg-zinc-900
+
+                                    border
+
+                                    border-zinc-800
+
+                                    hover:border-emerald-600
+
+                                    hover:text-emerald-500
+
+                                    text-zinc-300
+
+                                "
+
+                            >
+
+                                <Terminal size={16} />
+
+                                {connecting ? "Conectando..." : "SSH"}
+
+                            </button>
+
+                        }
+
+                        <button
+
+                            onClick={handleSave}
+
+                            disabled={!dirty || saving}
+
+                            title="Guardar cambios"
+
+                            className="
+
+                                flex
+
+                                items-center
+
+                                gap-2
+
+                                text-sm
+
+                                font-medium
+
+                                h-10
+
+                                px-4
+
+                                rounded-lg
+
+                                transition
+
+                                disabled:opacity-40
+
+                                disabled:cursor-not-allowed
+
+                                bg-blue-600
+
+                                hover:bg-blue-500
+
+                                text-white
+
+                            "
+
+                        >
+
+                            <Save size={16} />
+
+                            {saving ? "Guardando..." : "Guardar"}
+
+                        </button>
+
+                        <div className="w-px h-6 bg-zinc-800 mx-1" />
+
+                        <button
+
+                            onClick={handleDelete}
+
+                            title="Eliminar elemento"
+
+                            className="
+
+                                w-10
+
+                                h-10
+
+                                rounded-lg
+
+                                flex
+
+                                items-center
+
+                                justify-center
+
+                                text-zinc-500
+
+                                hover:text-red-500
+
+                                hover:bg-zinc-900
+
+                                transition
+
+                            "
+
+                        >
+
+                            <Trash2 size={16} />
+
+                        </button>
+
+                    </div>
 
                 </div>
 
             </div>
 
-            <div className="max-w-4xl p-8">
-
-                <div className="mb-8">
-
-                    <label className="block text-sm text-zinc-400 mb-2">
-
-                        Título
-
-                    </label>
-
-                    <input
-
-                        value={selectedItem.title}
-
-                        onChange={(e) => changeTitle(e.target.value)}
-
-                        className="
-
-                            w-full
-
-                            bg-zinc-900
-
-                            border
-
-                            border-zinc-800
-
-                            rounded-lg
-
-                            px-4
-
-                            py-3
-
-                            text-white
-
-                            outline-none
-
-                            focus:border-blue-500
-
-                        "
-
-                    />
-
-                </div>
+            <div className="max-w-4xl px-8 py-8">
 
                 {
 
-                    selectedItem.fields.map(field => (
+                    draft.fields.map(field => (
 
                         <FieldEditor
 
                             key={field.id}
 
                             field={field}
+
+                            onChange={(value) => changeField(field.id, value)}
 
                         />
 
@@ -302,9 +638,9 @@ export default function ItemEditor() {
 
                         rows={8}
 
-                        value={selectedItem.notes}
+                        value={draft.notes}
 
-                        onChange={(e)=>changeNotes(e.target.value)}
+                        onChange={(e) => changeNotes(e.target.value)}
 
                         className="
 
@@ -322,11 +658,15 @@ export default function ItemEditor() {
 
                             py-3
 
+                            text-sm
+
                             text-white
 
                             resize-none
 
                             outline-none
+
+                            transition-colors
 
                             focus:border-blue-500
 

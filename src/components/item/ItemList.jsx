@@ -1,42 +1,9 @@
 import { useEffect } from "react";
-import {
-    Server,
-    Database,
-    Mail,
-    Globe,
-    KeyRound,
-    FileText,
-    Star,
-    Plus
-} from "lucide-react";
+import { Star, Plus, Inbox } from "lucide-react";
 
 import useVault from "../../hooks/useVault";
 
-function getIcon(type) {
-
-    switch (type) {
-
-        case "Server":
-            return <Server size={18} className="text-zinc-400" />;
-
-        case "Database":
-            return <Database size={18} className="text-zinc-400"/>;
-
-        case "Email":
-            return <Mail size={18} className="text-zinc-400"/>;
-
-        case "Website":
-            return <Globe size={18} className="text-zinc-400"/>;
-
-        case "License":
-            return <KeyRound size={18} className="text-zinc-400"/>;
-
-        default:
-            return <FileText size={18} className="text-zinc-400"/>;
-
-    }
-
-}
+import { getTypeIcon, getTypeLabel } from "../../constants/itemTypes";
 
 export default function ItemList() {
 
@@ -73,7 +40,7 @@ export default function ItemList() {
 
                 w-80
 
-                bg-zinc-900
+                bg-zinc-950
 
                 border-r
 
@@ -117,7 +84,9 @@ export default function ItemList() {
 
                         font-semibold
 
-                        text-zinc-300
+                        text-white
+
+                        truncate
 
                     "
 
@@ -131,15 +100,15 @@ export default function ItemList() {
 
                     onClick={() => selectedNode && openCreateItemModal(selectedNode.id)}
 
+                    title="Nuevo elemento"
+
                     className="
 
-                        w-8
+                        w-7
 
-                        h-8
+                        h-7
 
-                        rounded
-
-                        hover:bg-zinc-800
+                        rounded-md
 
                         flex
 
@@ -147,11 +116,21 @@ export default function ItemList() {
 
                         justify-center
 
+                        shrink-0
+
+                        text-zinc-400
+
+                        hover:text-white
+
+                        hover:bg-zinc-800
+
+                        transition
+
                     "
 
                 >
 
-                    <Plus size={18} className="text-zinc-400"/>
+                    <Plus size={16} />
 
                 </button>
 
@@ -165,6 +144,10 @@ export default function ItemList() {
 
                     overflow-auto
 
+                    p-2
+
+                    space-y-1
+
                 "
 
             >
@@ -177,17 +160,61 @@ export default function ItemList() {
 
                         className="
 
-                            p-8
+                            flex
+
+                            flex-col
+
+                            items-center
 
                             text-center
 
-                            text-zinc-500
+                            gap-3
+
+                            py-12
+
+                            px-4
 
                         "
 
                     >
 
-                        No existen elementos.
+                        <div
+
+                            className="
+
+                                w-11
+
+                                h-11
+
+                                rounded-lg
+
+                                bg-zinc-900
+
+                                border
+
+                                border-zinc-800
+
+                                flex
+
+                                items-center
+
+                                justify-center
+
+                                text-zinc-600
+
+                            "
+
+                        >
+
+                            <Inbox size={18} />
+
+                        </div>
+
+                        <p className="text-sm text-zinc-500">
+
+                            No hay elementos en esta carpeta.
+
+                        </p>
 
                     </div>
 
@@ -195,71 +222,117 @@ export default function ItemList() {
 
                 {
 
-                    items.map(item => (
+                    items.map(item => {
 
-                        <div
+                        const Icon = getTypeIcon(item.item_type);
 
-                            key={item.id}
+                        const isSelected = selectedItem?.id === item.id;
 
-                            onClick={() => setSelectedItem(item)}
-
-                            className={`
-
-                                px-4
-
-                                py-3
-
-                                border-b
-
-                                border-zinc-800
-
-                                cursor-pointer
-
-                                transition-colors
-
-                                hover:bg-zinc-800
-
-                                ${selectedItem?.id === item.id ? "bg-zinc-800" : ""}
-
-                            `}
-
-                        >
+                        return (
 
                             <div
 
-                                className="
+                                key={item.id}
+
+                                onClick={() => setSelectedItem(item)}
+
+                                className={`
 
                                     flex
 
                                     items-center
 
-                                    justify-between
+                                    gap-3
 
-                                "
+                                    px-3
+
+                                    py-2.5
+
+                                    rounded-lg
+
+                                    cursor-pointer
+
+                                    transition-colors
+
+                                    border
+
+                                    ${
+
+                                        isSelected
+
+                                        ? "bg-zinc-900 border-zinc-700"
+
+                                        : "border-transparent hover:bg-zinc-900/60"
+
+                                    }
+
+                                `}
 
                             >
 
                                 <div
 
-                                    className="
+                                    className={`
+
+                                        w-9
+
+                                        h-9
+
+                                        rounded-lg
+
+                                        border
 
                                         flex
 
                                         items-center
 
-                                        gap-3
+                                        justify-center
 
-                                    "
+                                        shrink-0
+
+                                        ${
+
+                                            isSelected
+
+                                            ? "bg-zinc-800 border-zinc-700 text-blue-400"
+
+                                            : "bg-zinc-900 border-zinc-800 text-zinc-500"
+
+                                        }
+
+                                    `}
 
                                 >
 
-                                    {getIcon(item.item_type)}
+                                    <Icon size={16} />
 
-                                    <span className="text-white">
+                                </div>
+
+                                <div className="min-w-0 flex-1">
+
+                                    <div
+
+                                        className={`
+
+                                            text-sm
+
+                                            truncate
+
+                                            ${isSelected ? "text-white" : "text-zinc-300"}
+
+                                        `}
+
+                                    >
 
                                         {item.title}
 
-                                    </span>
+                                    </div>
+
+                                    <div className="text-xs text-zinc-500 truncate">
+
+                                        {getTypeLabel(item.item_type)}
+
+                                    </div>
 
                                 </div>
 
@@ -269,7 +342,9 @@ export default function ItemList() {
 
                                     <Star
 
-                                        size={15}
+                                        size={13}
+
+                                        className="shrink-0"
 
                                         fill="#EAB308"
 
@@ -281,27 +356,9 @@ export default function ItemList() {
 
                             </div>
 
-                            <div
+                        );
 
-                                className="
-
-                                    mt-1
-
-                                    text-xs
-
-                                    text-zinc-500
-
-                                "
-
-                            >
-
-                                {item.item_type}
-
-                            </div>
-
-                        </div>
-
-                    ))
+                    })
 
                 }
 

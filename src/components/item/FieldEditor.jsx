@@ -6,86 +6,34 @@ import {
     Check
 } from "lucide-react";
 
-import useVault from "../../hooks/useVault";
-
-import {
-    updateItemField
-} from "../../services/vault";
-
 export default function FieldEditor({
 
     field,
+    onChange,
 
 }) {
 
-    const {
+    const [show, setShow] = useState(false);
 
-        selectedItem,
-        setSelectedItem,
+    const [copied, setCopied] = useState(false);
 
-    } = useVault();
-
-    const [show,setShow]=useState(false);
-
-    const [copied,setCopied]=useState(false);
-
-    async function changeValue(value){
-
-        const updatedFields=selectedItem.fields.map(f=>{
-
-            if(f.id===field.id){
-
-                return{
-
-                    ...f,
-
-                    value
-
-                };
-
-            }
-
-            return f;
-
-        });
-
-        setSelectedItem({
-
-            ...selectedItem,
-
-            fields:updatedFields,
-
-        });
-
-        await updateItemField(
-
-            selectedItem.id,
-
-            field.key,
-
-            value,
-
-        );
-
-    }
-
-    async function copy(){
+    async function copy() {
 
         await navigator.clipboard.writeText(field.value);
 
         setCopied(true);
 
-        setTimeout(()=>{
+        setTimeout(() => {
 
             setCopied(false);
 
-        },1500);
+        }, 1500);
 
     }
 
-    return(
+    return (
 
-        <div className="mb-6">
+        <div className="mb-5">
 
             <label
 
@@ -115,6 +63,8 @@ export default function FieldEditor({
 
                     items-center
 
+                    h-11
+
                     bg-zinc-900
 
                     border
@@ -124,6 +74,10 @@ export default function FieldEditor({
                     rounded-lg
 
                     overflow-hidden
+
+                    transition-colors
+
+                    focus-within:border-blue-500
 
                 "
 
@@ -155,17 +109,19 @@ export default function FieldEditor({
 
                     value={field.value}
 
-                    onChange={(e)=>changeValue(e.target.value)}
+                    onChange={(e) => onChange(e.target.value)}
 
                     className="
 
                         flex-1
 
+                        h-full
+
                         bg-transparent
 
                         px-4
 
-                        py-3
+                        text-sm
 
                         text-white
 
@@ -177,19 +133,27 @@ export default function FieldEditor({
 
                 {
 
-                    field.hidden&&
+                    field.hidden &&
 
                     <button
 
-                        onClick={()=>setShow(!show)}
+                        onClick={() => setShow(!show)}
+
+                        title={show ? "Ocultar" : "Mostrar"}
 
                         className="
 
                             px-3
 
+                            h-full
+
+                            text-zinc-500
+
+                            hover:text-white
+
                             hover:bg-zinc-800
 
-                            h-full
+                            transition-colors
 
                         "
 
@@ -201,11 +165,11 @@ export default function FieldEditor({
 
                             ?
 
-                                <EyeOff size={18} className="text-zinc-400"/>
+                                <EyeOff size={16}/>
 
                             :
 
-                                <Eye size={18} className="text-zinc-400"/>
+                                <Eye size={16}/>
 
                         }
 
@@ -217,13 +181,21 @@ export default function FieldEditor({
 
                     onClick={copy}
 
+                    title="Copiar"
+
                     className="
 
                         px-3
 
+                        h-full
+
+                        text-zinc-500
+
+                        hover:text-white
+
                         hover:bg-zinc-800
 
-                        h-full
+                        transition-colors
 
                     "
 
@@ -235,11 +207,11 @@ export default function FieldEditor({
 
                         ?
 
-                            <Check size={18} className="text-zinc-400"/>
+                            <Check size={16} className="text-emerald-500"/>
 
                         :
 
-                            <Copy size={18} className="text-zinc-400"/>
+                            <Copy size={16}/>
 
                     }
 

@@ -35,6 +35,8 @@ export default function TreeNode({
 
     );
 
+    const isSelected = selectedNode?.id === node.id;
+
     async function handleExpand(e) {
 
         e.stopPropagation();
@@ -71,7 +73,7 @@ export default function TreeNode({
 
         await deleteNode(node.id);
 
-        if (selectedNode?.id === node.id) {
+        if (isSelected) {
 
             setSelectedNode(null);
 
@@ -90,10 +92,12 @@ export default function TreeNode({
                 onClick={handleSelect}
 
                 style={{
-                    paddingLeft: `${level * 18 + 10}px`
+                    paddingLeft: `${level * 16 + 12}px`
                 }}
 
                 className={`
+
+                    relative
 
                     h-9
 
@@ -111,9 +115,19 @@ export default function TreeNode({
 
                     group
 
-                    hover:bg-zinc-800
+                    border-l-2
 
-                    ${selectedNode?.id === node.id ? "bg-zinc-800 text-white" : "text-zinc-300"}
+                    transition-colors
+
+                    ${
+
+                        isSelected
+
+                        ? "bg-zinc-900 text-white border-blue-500"
+
+                        : "text-zinc-400 border-transparent hover:bg-zinc-900/60 hover:text-zinc-200"
+
+                    }
 
                 `}
 
@@ -137,11 +151,11 @@ export default function TreeNode({
 
                             ?
 
-                                <ChevronDown size={15}/>
+                                <ChevronDown size={14}/>
 
                             :
 
-                                <ChevronRight size={15}/>
+                                <ChevronRight size={14}/>
 
                         :
 
@@ -157,11 +171,11 @@ export default function TreeNode({
 
                     ?
 
-                        <FolderOpen size={17} className="shrink-0 text-zinc-400"/>
+                        <FolderOpen size={16} className="shrink-0"/>
 
                     :
 
-                        <Folder size={17} className="shrink-0 text-zinc-400"/>
+                        <Folder size={16} className="shrink-0"/>
 
                 }
 
@@ -175,6 +189,8 @@ export default function TreeNode({
 
                     onClick={handleDelete}
 
+                    title="Eliminar carpeta"
+
                     className="
 
                         opacity-0
@@ -183,11 +199,11 @@ export default function TreeNode({
 
                         shrink-0
 
-                        w-7
+                        w-6
 
-                        h-7
+                        h-6
 
-                        mr-1
+                        mr-2
 
                         rounded
 
@@ -201,7 +217,7 @@ export default function TreeNode({
 
                         hover:text-red-500
 
-                        hover:bg-zinc-700
+                        hover:bg-zinc-800
 
                         transition
 
@@ -209,7 +225,7 @@ export default function TreeNode({
 
                 >
 
-                    <Trash2 size={14} className="text-zinc-400"/>
+                    <Trash2 size={13}/>
 
                 </button>
 

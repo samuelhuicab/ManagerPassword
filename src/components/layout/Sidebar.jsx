@@ -1,8 +1,4 @@
-import {
-
-    Plus,
-
-} from "lucide-react";
+import { Plus, FolderTree } from "lucide-react";
 
 import TreeView from "../tree/TreeView";
 
@@ -20,7 +16,7 @@ export default function Sidebar() {
 
                 w-72
 
-                bg-zinc-900
+                bg-zinc-950
 
                 border-r
 
@@ -50,43 +46,51 @@ export default function Sidebar() {
 
                     justify-between
 
-                    px-3
+                    px-4
 
                 "
 
             >
 
-                <span
+                <div className="flex items-center gap-2 text-zinc-400">
 
-                    className="
+                    <FolderTree size={15} />
 
-                        text-sm
+                    <span
 
-                        font-semibold
+                        className="
 
-                        text-zinc-300
+                            text-xs
 
-                    "
+                            font-semibold
 
-                >
+                            uppercase
 
-                    Carpetas
+                            tracking-wider
 
-                </span>
+                        "
+
+                    >
+
+                        Carpetas
+
+                    </span>
+
+                </div>
 
                 <button
 
                     onClick={() => openCreateNodeModal(null)}
 
+                    title="Nueva carpeta"
+
                     className="
 
-                        w-8
+                        w-7
 
-                        h-8
+                        h-7
 
-                        rounded
-
-                        hover:bg-zinc-800
+                        rounded-md
 
                         flex
 
@@ -94,11 +98,19 @@ export default function Sidebar() {
 
                         justify-center
 
+                        text-zinc-400
+
+                        hover:text-white
+
+                        hover:bg-zinc-800
+
+                        transition
+
                     "
 
                 >
 
-                    <Plus size={16} className="text-zinc-400"/>
+                    <Plus size={16}/>
 
                 </button>
 
@@ -111,6 +123,8 @@ export default function Sidebar() {
                     flex-1
 
                     overflow-auto
+
+                    py-1
 
                 "
 

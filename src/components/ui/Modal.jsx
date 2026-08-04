@@ -15,11 +15,13 @@ export default function Modal({
             className="
                 fixed
                 inset-0
-                bg-black/60
+                bg-black/70
+                backdrop-blur-sm
                 flex
                 items-center
                 justify-center
                 z-50
+                p-4
             "
 
         >
@@ -29,24 +31,41 @@ export default function Modal({
                 onClick={(e) => e.stopPropagation()}
 
                 className="
-                    bg-zinc-900
+                    bg-zinc-950
                     border
                     border-zinc-800
                     rounded-xl
                     w-full
                     max-w-md
-                    p-6
+                    shadow-2xl
                 "
 
             >
 
-                <h2 className="text-lg font-semibold text-white mb-4">
+                <div
 
-                    {title}
+                    className="
+                        px-6
+                        py-4
+                        border-b
+                        border-zinc-800
+                    "
 
-                </h2>
+                >
 
-                {children}
+                    <h2 className="text-base font-semibold text-white">
+
+                        {title}
+
+                    </h2>
+
+                </div>
+
+                <div className="p-6">
+
+                    {children}
+
+                </div>
 
             </div>
 

@@ -16,7 +16,11 @@ export default function Button({
         text-sm
         font-medium
         transition-colors
-        disabled:opacity-50
+        inline-flex
+        items-center
+        justify-center
+        gap-2
+        disabled:opacity-40
         disabled:cursor-not-allowed
     `;
 
@@ -29,9 +33,17 @@ export default function Button({
         `,
 
         secondary: `
-            bg-zinc-800
-            hover:bg-zinc-700
+            bg-zinc-900
+            border
+            border-zinc-800
+            hover:border-zinc-700
             text-zinc-200
+        `,
+
+        ghost: `
+            text-zinc-400
+            hover:text-white
+            hover:bg-zinc-900
         `,
 
         danger: `
