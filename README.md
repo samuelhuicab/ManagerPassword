@@ -21,7 +21,6 @@ secure-password-manager is a cross-platform desktop application built with Tauri
 - Tauri
 - Rust
 - React
-- TypeScript
 - Vite
 
 ## Requirements
