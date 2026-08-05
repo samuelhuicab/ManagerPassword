@@ -33,6 +33,8 @@ export function VaultProvider({ children }) {
 
         setNodes(data);
 
+        return data;
+
     }
 
     async function loadItems(nodeId) {
@@ -41,13 +43,15 @@ export function VaultProvider({ children }) {
 
             setItems([]);
 
-            return;
+            return [];
 
         }
 
         const data = await getItemsByNode(nodeId);
 
         setItems(data);
+
+        return data;
 
     }
 
@@ -109,6 +113,20 @@ export function VaultProvider({ children }) {
 
     }
 
+    // Navega directo a un item encontrado por el buscador: selecciona su
+    // carpeta, carga los items de esa carpeta, y abre el item en el editor.
+    async function selectSearchResult(item) {
+
+        const node = nodes.find(n => n.id === item.node_id) || null;
+
+        setSelectedNode(node);
+
+        await loadItems(item.node_id);
+
+        setSelectedItem(item);
+
+    }
+
     useEffect(() => {
 
         initialize();
@@ -120,8 +138,6 @@ export function VaultProvider({ children }) {
         if (!selectedNode) {
 
             setItems([]);
-
-            setSelectedItem(null);
 
             return;
 
@@ -154,6 +170,8 @@ export function VaultProvider({ children }) {
         createNodeAction,
 
         createItemAction,
+
+        selectSearchResult,
 
         createNodeModal,
 

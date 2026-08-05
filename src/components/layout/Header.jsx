@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
-import { Search, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
+
+import SearchInput from "../ui/SearchInput";
 
 const appWindow = getCurrentWindow();
 
@@ -210,69 +212,7 @@ export default function Header() {
 
             >
 
-                <div className="relative w-full max-w-sm">
-
-                    <Search
-
-                        size={15}
-
-                        className="
-
-                            absolute
-
-                            left-3
-
-                            top-1/2
-
-                            -translate-y-1/2
-
-                            text-zinc-500
-
-                            pointer-events-none
-
-                        "
-
-                    />
-
-                    <input
-
-                        className="
-
-                            w-full
-
-                            h-8
-
-                            bg-zinc-900
-
-                            border
-
-                            border-zinc-800
-
-                            rounded-lg
-
-                            pl-9
-
-                            pr-4
-
-                            text-sm
-
-                            text-white
-
-                            outline-none
-
-                            transition-colors
-
-                            placeholder:text-zinc-600
-
-                            focus:border-blue-500
-
-                        "
-
-                        placeholder="Buscar..."
-
-                    />
-
-                </div>
+                <SearchInput />
 
             </div>
 
