@@ -1,6 +1,6 @@
-# Secure Vault
+# secure-password-manager
 
-Secure Vault is a cross-platform desktop application built with Tauri, React, and Rust for securely storing sensitive information locally. The application is designed with a local-first approach, ensuring that user data never leaves the device.
+secure-password-manager is a cross-platform desktop application built with Tauri, React, and Rust for securely storing sensitive information locally. The application is designed with a local-first approach, ensuring that user data never leaves the device.
 
 ## Features
 
@@ -38,8 +38,8 @@ Before running the application, make sure the following software is installed:
 Clone the repository:
 
 ```bash
-git clone https://github.com/<your-username>/secure-vault.git
-cd secure-vault
+git clone https://github.com/samuelhuicab/secure-password-manager.git
+cd secure-password-manager
 ```
 
 Install dependencies:
