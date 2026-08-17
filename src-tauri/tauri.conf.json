@@ -14,7 +14,10 @@
       {
         "title": "Manager SSH",
         "width": 1100,
-        "height": 600
+        "height": 600,
+        "minWidth": 760,
+        "minHeight": 480,
+        "decorations": false
       }
     ],
     "security": {
