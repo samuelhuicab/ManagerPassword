@@ -217,7 +217,7 @@ export default function ItemEditor() {
         const host = getFieldValue("host");
         const username = getFieldValue("username");
         if (!host || !username) {
-            alert("Completá 'Host' y 'Usuario' antes de conectar.");
+            alert("Ingresa 'Host' y 'Usuario' antes de conectar.");
             return;
         }
         if (dirty && !confirm("Tenés cambios sin guardar. Se conecta con lo que hay en pantalla. ¿Continuar?")) {
