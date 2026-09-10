@@ -22,23 +22,29 @@ const LOCK_OPTIONS = [
     { v: 1800, label: "30 minutos" },
 ];
 
+const pwInput =
+    "w-full h-10 bg-zinc-900 border border-zinc-800 rounded-lg px-3 text-sm text-white outline-none focus:border-blue-500";
+
 export default function SettingsModal({ onClose }) {
 
     const { hasKeychain, refresh, lock } = useAuth();
 
     const [settings, setSettings] = useState(null);
     const [msg, setMsg] = useState("");
+    const [busy, setBusy] = useState(false);
 
     const [cur, setCur] = useState("");
     const [next, setNext] = useState("");
     const [next2, setNext2] = useState("");
 
+    const [backupMode, setBackupMode] = useState(null); // "export" | "import" | null
+    const [backupPw, setBackupPw] = useState("");
+    const [importAck, setImportAck] = useState(false);
+
     useEffect(() => {
-        getSettings().then(setSettings).catch(() => setSettings({
-            autoLockSeconds: 300,
-            rememberDevice: false,
-            clipboardClearSeconds: 20,
-        }));
+        getSettings().then(setSettings).catch(() =>
+            setSettings({ autoLockSeconds: 300, rememberDevice: false, clipboardClearSeconds: 20 })
+        );
     }, []);
 
     if (!settings) return null;
@@ -46,61 +52,82 @@ export default function SettingsModal({ onClose }) {
     async function persist(patch) {
         const updated = { ...settings, ...patch };
         setSettings(updated);
-        await updateSettings(updated);
+        try {
+            await updateSettings(updated);
+        } catch (err) {
+            setMsg(String(err));
+        }
     }
 
     async function handleChangePassword() {
         setMsg("");
         if (next.length < 8) return setMsg("La nueva contraseña necesita 8+ caracteres.");
         if (next !== next2) return setMsg("Las contraseñas nuevas no coinciden.");
+        setBusy(true);
         try {
             await changeMasterPassword(cur, next);
             setCur(""); setNext(""); setNext2("");
             setMsg("Contraseña maestra actualizada.");
         } catch (err) {
             setMsg(String(err));
+        } finally {
+            setBusy(false);
         }
     }
 
     async function handleForget() {
-        await forgetKeychain();
-        await refresh();
-        setMsg("Se olvidó la clave de este equipo.");
-    }
-
-    async function handleExportBackup() {
-        setMsg("");
-        const pw = prompt("Contraseña para el backup (mín. 8):");
-        if (!pw) return;
-        const path = await saveDialog({
-            defaultPath: "passcontroller-backup.vault",
-            filters: [{ name: "Vault", extensions: ["vault"] }],
-        });
-        if (!path) return;
         try {
-            await exportBackup(path, pw);
-            setMsg("Backup exportado.");
+            await forgetKeychain();
+            await refresh();
+            setMsg("Se olvidó la clave de este equipo.");
         } catch (err) {
             setMsg(String(err));
         }
     }
 
-    async function handleImportBackup() {
+    function openBackup(mode) {
+        setBackupMode(mode);
+        setBackupPw("");
+        setImportAck(false);
         setMsg("");
-        if (!confirm("Importar reemplaza TODO el contenido actual del vault. ¿Seguir?")) return;
-        const path = await openDialog({
-            multiple: false,
-            filters: [{ name: "Vault", extensions: ["vault"] }],
-        });
-        if (!path) return;
-        const pw = prompt("Contraseña del backup:");
-        if (!pw) return;
+    }
+
+    async function runExport() {
+        if (backupPw.length < 8) return setMsg("La contraseña del backup necesita 8+ caracteres.");
+        setBusy(true);
         try {
-            await importBackup(path, pw);
+            const path = await saveDialog({
+                defaultPath: "passcontroller-backup.vault",
+                filters: [{ name: "Vault", extensions: ["vault"] }],
+            });
+            if (!path) return setBusy(false);
+            await exportBackup(path, backupPw);
+            setMsg("Backup exportado.");
+            setBackupMode(null);
+        } catch (err) {
+            setMsg(String(err));
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    async function runImport() {
+        if (!importAck) return setMsg("Confirmá que entendés que se reemplaza todo el vault.");
+        if (!backupPw) return setMsg("Ingresá la contraseña del backup.");
+        setBusy(true);
+        try {
+            const path = await openDialog({
+                multiple: false,
+                filters: [{ name: "Vault", extensions: ["vault"] }],
+            });
+            if (!path) return setBusy(false);
+            await importBackup(path, backupPw);
             setMsg("Backup importado. Se bloqueará para recargar.");
             setTimeout(() => lock(), 900);
         } catch (err) {
             setMsg(String(err));
+        } finally {
+            setBusy(false);
         }
     }
 
@@ -159,15 +186,12 @@ export default function SettingsModal({ onClose }) {
                     </h3>
                     <div className="space-y-2">
                         <input type="password" placeholder="Actual" value={cur}
-                            onChange={(e) => setCur(e.target.value)}
-                            className="w-full h-10 bg-zinc-900 border border-zinc-800 rounded-lg px-3 text-sm text-white outline-none focus:border-blue-500" />
+                            onChange={(e) => setCur(e.target.value)} className={pwInput} />
                         <input type="password" placeholder="Nueva" value={next}
-                            onChange={(e) => setNext(e.target.value)}
-                            className="w-full h-10 bg-zinc-900 border border-zinc-800 rounded-lg px-3 text-sm text-white outline-none focus:border-blue-500" />
+                            onChange={(e) => setNext(e.target.value)} className={pwInput} />
                         <input type="password" placeholder="Repetir nueva" value={next2}
-                            onChange={(e) => setNext2(e.target.value)}
-                            className="w-full h-10 bg-zinc-900 border border-zinc-800 rounded-lg px-3 text-sm text-white outline-none focus:border-blue-500" />
-                        <Button variant="secondary" onClick={handleChangePassword}>
+                            onChange={(e) => setNext2(e.target.value)} className={pwInput} />
+                        <Button variant="secondary" onClick={handleChangePassword} disabled={busy}>
                             Actualizar contraseña
                         </Button>
                     </div>
@@ -177,14 +201,67 @@ export default function SettingsModal({ onClose }) {
                     <h3 className="text-sm font-semibold text-white mb-3">
                         Backup cifrado
                     </h3>
-                    <div className="flex gap-3">
-                        <Button variant="secondary" onClick={handleExportBackup}>
-                            Exportar
-                        </Button>
-                        <Button variant="secondary" onClick={handleImportBackup}>
-                            Importar
-                        </Button>
-                    </div>
+
+                    {backupMode === null && (
+                        <div className="flex gap-3">
+                            <Button variant="secondary" onClick={() => openBackup("export")}>
+                                Exportar
+                            </Button>
+                            <Button variant="secondary" onClick={() => openBackup("import")}>
+                                Importar
+                            </Button>
+                        </div>
+                    )}
+
+                    {backupMode === "export" && (
+                        <div className="space-y-2">
+                            <input
+                                type="password"
+                                autoFocus
+                                placeholder="Contraseña para el backup (8+)"
+                                value={backupPw}
+                                onChange={(e) => setBackupPw(e.target.value)}
+                                className={pwInput}
+                            />
+                            <div className="flex gap-2">
+                                <Button variant="primary" onClick={runExport} disabled={busy}>
+                                    Elegir archivo y exportar
+                                </Button>
+                                <Button variant="ghost" onClick={() => setBackupMode(null)}>
+                                    Cancelar
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {backupMode === "import" && (
+                        <div className="space-y-2">
+                            <label className="flex items-start gap-2 text-xs text-amber-400 select-none cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={importAck}
+                                    onChange={(e) => setImportAck(e.target.checked)}
+                                    className="accent-blue-600 mt-0.5"
+                                />
+                                Entiendo que importar reemplaza TODO el contenido actual del vault.
+                            </label>
+                            <input
+                                type="password"
+                                placeholder="Contraseña del backup"
+                                value={backupPw}
+                                onChange={(e) => setBackupPw(e.target.value)}
+                                className={pwInput}
+                            />
+                            <div className="flex gap-2">
+                                <Button variant="danger" onClick={runImport} disabled={busy}>
+                                    Elegir archivo e importar
+                                </Button>
+                                <Button variant="ghost" onClick={() => setBackupMode(null)}>
+                                    Cancelar
+                                </Button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {msg && (

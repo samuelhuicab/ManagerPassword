@@ -42,6 +42,12 @@ export default function ItemEditor() {
     const [connecting, setConnecting] = useState(false);
     const [rev, setRev] = useState(0);
 
+    const [addingField, setAddingField] = useState(false);
+    const [newFieldLabel, setNewFieldLabel] = useState("");
+    const [newFieldHidden, setNewFieldHidden] = useState(false);
+    const [fieldBusy, setFieldBusy] = useState(false);
+    const [fieldError, setFieldError] = useState("");
+
     // Sincroniza el borrador cuando cambia el item o su estructura (rev).
     useEffect(() => {
 
@@ -61,9 +67,9 @@ export default function ItemEditor() {
     }, [selectedItem?.id, rev]);
 
     async function refreshItem() {
-        if (!selectedNode) return;
-        const items = await getItemsByNode(selectedNode.id);
-        await loadItems(selectedNode.id);
+        const nodeId = selectedItem.node_id;
+        const items = await getItemsByNode(nodeId);
+        if (selectedNode?.id === nodeId) await loadItems(nodeId);
         const fresh = items.find((i) => i.id === selectedItem.id);
         if (fresh) {
             setSelectedItem(fresh);
@@ -113,18 +119,42 @@ export default function ItemEditor() {
         setDirty(true);
     }
 
-    async function handleAddField() {
-        const label = prompt("Nombre del campo:");
-        if (!label) return;
-        const hidden = confirm("¿Es un valor sensible (se oculta y se borra del portapapeles)?");
-        await addItemField(selectedItem.id, label, hidden);
-        await refreshItem();
+    function openAddField() {
+        setNewFieldLabel("");
+        setNewFieldHidden(false);
+        setFieldError("");
+        setAddingField(true);
+    }
+
+    async function handleAddField(e) {
+        e?.preventDefault();
+        const label = newFieldLabel.trim();
+        if (!label) {
+            setFieldError("Escribí un nombre para el campo.");
+            return;
+        }
+        setFieldBusy(true);
+        setFieldError("");
+        try {
+            await addItemField(selectedItem.id, label, newFieldHidden);
+            await refreshItem();
+            setAddingField(false);
+            setNewFieldLabel("");
+            setNewFieldHidden(false);
+        } catch (err) {
+            setFieldError(String(err));
+        } finally {
+            setFieldBusy(false);
+        }
     }
 
     async function handleRemoveField(field) {
-        if (!confirm(`¿Quitar el campo "${field.label}"?`)) return;
-        await removeItemField(selectedItem.id, field.id);
-        await refreshItem();
+        try {
+            await removeItemField(selectedItem.id, field.id);
+            await refreshItem();
+        } catch (err) {
+            alert(String(err));
+        }
     }
 
     async function handleExportEnv() {
@@ -213,90 +243,86 @@ export default function ItemEditor() {
 
             <div className="border-b border-zinc-800 px-8 py-5">
 
-                <div className="flex items-start justify-between gap-6">
-
-                    <div className="flex items-start gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 mt-0.5 text-zinc-400">
-                            <TypeIcon size={18} />
-                        </div>
-                        <div className="min-w-0">
-                            <input
-                                value={draft.title}
-                                onChange={(e) => changeTitle(e.target.value)}
-                                placeholder="Sin título"
-                                className="block w-full bg-transparent text-xl font-semibold text-white outline-none placeholder:text-zinc-600"
-                            />
-                            <div className="flex items-center gap-2 mt-1 text-xs text-zinc-500">
-                                <span>{getTypeLabel(selectedItem.item_type)}</span>
-                                {dirty && (
-                                    <>
-                                        <span className="text-zinc-700">•</span>
-                                        <span className="text-amber-500 flex items-center gap-1">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                            Sin guardar
-                                        </span>
-                                    </>
-                                )}
-                            </div>
+                <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 mt-0.5 text-zinc-400">
+                        <TypeIcon size={18} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <input
+                            value={draft.title}
+                            onChange={(e) => changeTitle(e.target.value)}
+                            placeholder="Sin título"
+                            className="block w-full bg-transparent text-xl font-semibold text-white outline-none placeholder:text-zinc-600 truncate"
+                        />
+                        <div className="flex items-center gap-2 mt-1 text-xs text-zinc-500">
+                            <span>{getTypeLabel(selectedItem.item_type)}</span>
+                            {dirty && (
+                                <>
+                                    <span className="text-zinc-700">•</span>
+                                    <span className="text-amber-500 flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                        Sin guardar
+                                    </span>
+                                </>
+                            )}
                         </div>
                     </div>
+                </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
+                <div className="flex flex-wrap items-center gap-2 mt-4">
 
-                        {isEnv && (
-                            <>
-                                <button
-                                    onClick={handleExportEnv}
-                                    title="Exportar como .env"
-                                    className="flex items-center gap-2 text-sm font-medium h-10 px-3 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-300 transition"
-                                >
-                                    <FileDown size={15} /> .env
-                                </button>
-                                <button
-                                    onClick={handleImportEnv}
-                                    title="Importar un .env"
-                                    className="flex items-center gap-2 text-sm font-medium h-10 px-3 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-300 transition"
-                                >
-                                    <FileUp size={15} />
-                                </button>
-                            </>
-                        )}
-
-                        <CopyMenu item={selectedItem} />
-
-                        {isServer && (
+                    {isEnv && (
+                        <>
                             <button
-                                onClick={handleConnectSsh}
-                                disabled={connecting}
-                                title="Conectar por SSH"
-                                className="flex items-center gap-2 text-sm font-medium h-10 px-4 rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed bg-zinc-900 border border-zinc-800 hover:border-emerald-600 hover:text-emerald-500 text-zinc-300"
+                                onClick={handleExportEnv}
+                                title="Exportar como .env"
+                                className="flex items-center gap-2 text-sm font-medium h-9 px-3 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-300 transition"
                             >
-                                <Terminal size={16} />
-                                {connecting ? "Conectando..." : "SSH"}
+                                <FileDown size={15} /> .env
                             </button>
-                        )}
+                            <button
+                                onClick={handleImportEnv}
+                                title="Importar un .env"
+                                className="flex items-center justify-center h-9 w-9 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-300 transition"
+                            >
+                                <FileUp size={15} />
+                            </button>
+                        </>
+                    )}
 
+                    <CopyMenu item={selectedItem} />
+
+                    {isServer && (
                         <button
-                            onClick={handleSave}
-                            disabled={!dirty || saving}
-                            title="Guardar cambios"
-                            className="flex items-center gap-2 text-sm font-medium h-10 px-4 rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed bg-blue-600 hover:bg-blue-500 text-white"
+                            onClick={handleConnectSsh}
+                            disabled={connecting}
+                            title="Conectar por SSH"
+                            className="flex items-center gap-2 text-sm font-medium h-9 px-3 rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed bg-zinc-900 border border-zinc-800 hover:border-emerald-600 hover:text-emerald-500 text-zinc-300"
                         >
-                            <Save size={16} />
-                            {saving ? "Guardando..." : "Guardar"}
+                            <Terminal size={15} />
+                            {connecting ? "Conectando..." : "SSH"}
                         </button>
+                    )}
 
-                        <div className="w-px h-6 bg-zinc-800 mx-1" />
+                    <div className="flex-1" />
 
-                        <button
-                            onClick={handleDelete}
-                            title="Eliminar elemento"
-                            className="w-10 h-10 rounded-lg flex items-center justify-center text-zinc-500 hover:text-red-500 hover:bg-zinc-900 transition"
-                        >
-                            <Trash2 size={16} />
-                        </button>
+                    <button
+                        onClick={handleSave}
+                        disabled={!dirty || saving}
+                        title="Guardar cambios"
+                        className="flex items-center gap-2 text-sm font-medium h-9 px-4 rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed bg-blue-600 hover:bg-blue-500 text-white"
+                    >
+                        <Save size={15} />
+                        {saving ? "Guardando..." : "Guardar"}
+                    </button>
 
-                    </div>
+                    <button
+                        onClick={handleDelete}
+                        title="Eliminar elemento"
+                        className="h-9 w-9 rounded-lg flex items-center justify-center text-zinc-500 hover:text-red-500 hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition"
+                    >
+                        <Trash2 size={15} />
+                    </button>
 
                 </div>
 
@@ -313,13 +339,56 @@ export default function ItemEditor() {
                     />
                 ))}
 
-                <button
-                    onClick={handleAddField}
-                    className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white h-9 px-3 rounded-lg border border-dashed border-zinc-800 hover:border-zinc-700 transition-colors"
-                >
-                    <Plus size={15} />
-                    Añadir campo
-                </button>
+                {!addingField ? (
+                    <button
+                        onClick={openAddField}
+                        className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white h-9 px-3 rounded-lg border border-dashed border-zinc-800 hover:border-zinc-700 transition-colors"
+                    >
+                        <Plus size={15} />
+                        Añadir campo
+                    </button>
+                ) : (
+                    <form
+                        onSubmit={handleAddField}
+                        className="bg-zinc-900 border border-zinc-800 rounded-lg p-3"
+                    >
+                        <div className="flex items-center gap-2">
+                            <input
+                                autoFocus
+                                value={newFieldLabel}
+                                onChange={(e) => setNewFieldLabel(e.target.value)}
+                                placeholder="Nombre del campo (ej: DATABASE_URL)"
+                                className="flex-1 h-9 bg-zinc-950 border border-zinc-800 rounded-lg px-3 text-sm text-white outline-none focus:border-blue-500"
+                            />
+                            <button
+                                type="submit"
+                                disabled={fieldBusy}
+                                className="h-9 px-3 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-sm font-medium transition-colors"
+                            >
+                                {fieldBusy ? "..." : "Añadir"}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setAddingField(false)}
+                                className="h-9 px-3 rounded-lg text-zinc-400 hover:text-white text-sm transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                        </div>
+                        <label className="flex items-center gap-2 mt-2.5 text-xs text-zinc-400 select-none cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={newFieldHidden}
+                                onChange={(e) => setNewFieldHidden(e.target.checked)}
+                                className="accent-blue-600"
+                            />
+                            Valor sensible (se oculta y se borra del portapapeles al copiar)
+                        </label>
+                        {fieldError && (
+                            <div className="mt-2 text-xs text-red-400">{fieldError}</div>
+                        )}
+                    </form>
+                )}
 
                 <div className="mt-8">
                     <label className="block text-sm text-zinc-400 mb-2">Notas</label>

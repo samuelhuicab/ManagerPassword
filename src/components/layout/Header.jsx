@@ -10,7 +10,21 @@ import LockButton from "../security/LockButton";
 import SettingsModal from "../settings/SettingsModal";
 import SecretGenerator from "../dev/SecretGenerator";
 
-const appWindow = getCurrentWindow();
+// En un navegador normal (sin Tauri) esto no existe: degradamos con no-ops
+// para poder previsualizar la UI.
+let appWindow;
+try {
+    appWindow = getCurrentWindow();
+} catch {
+    const noop = async () => {};
+    appWindow = {
+        isMaximized: async () => false,
+        onResized: async () => () => {},
+        minimize: noop,
+        toggleMaximize: noop,
+        close: noop,
+    };
+}
 
 function MinimizeIcon() {
 
@@ -150,6 +164,8 @@ export default function Header() {
 
                     h-full
 
+                    shrink-0
+
                 "
 
             >
@@ -202,6 +218,10 @@ export default function Header() {
 
                         whitespace-nowrap
 
+                        hidden
+
+                        sm:block
+
                     "
 
                 >
@@ -216,7 +236,7 @@ export default function Header() {
 
                 data-tauri-drag-region
 
-                className="flex-1 h-full flex items-center justify-center px-4"
+                className="flex-1 min-w-0 h-full flex items-center justify-center px-3"
 
             >
 

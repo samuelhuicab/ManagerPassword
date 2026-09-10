@@ -38,7 +38,6 @@ export default function LockScreen() {
     const score = strength(password);
 
     async function handleSubmit(e) {
-
         e.preventDefault();
         setError("");
 
@@ -54,7 +53,6 @@ export default function LockScreen() {
         }
 
         setBusy(true);
-
         try {
             if (creating) {
                 await createMaster(password);
@@ -65,7 +63,6 @@ export default function LockScreen() {
             setError(String(err));
             setBusy(false);
         }
-
     }
 
     async function handleKeychain() {
@@ -79,6 +76,9 @@ export default function LockScreen() {
         }
     }
 
+    const inputClass =
+        "w-full h-11 bg-zinc-900 border border-zinc-800 rounded-lg px-4 text-sm text-white outline-none transition-colors focus:border-blue-500";
+
     return (
 
         <div className="h-screen flex items-center justify-center bg-zinc-950 p-4">
@@ -86,21 +86,17 @@ export default function LockScreen() {
             <div className="w-full max-w-sm">
 
                 <div className="flex flex-col items-center mb-8">
-
                     <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-blue-500">
                         <ShieldCheck size={22} />
                     </div>
-
                     <h1 className="mt-4 text-lg font-semibold text-white">
                         {creating ? "Creá tu contraseña maestra" : "Vault bloqueado"}
                     </h1>
-
                     <p className="mt-1 text-sm text-zinc-500 text-center">
                         {creating
                             ? "Cifra todo el vault. No se puede recuperar si la perdés."
                             : "Ingresá tu contraseña maestra para continuar."}
                     </p>
-
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -114,40 +110,39 @@ export default function LockScreen() {
                             value={password}
                             autoFocus
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full h-11 bg-zinc-900 border border-zinc-800 rounded-lg px-4 text-sm text-white outline-none transition-colors focus:border-blue-500"
+                            className={inputClass}
                         />
-                    </div>
-
-                    {creating && (
-                        <>
-                            <div>
-                                <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden flex gap-0.5">
+                        {creating && password && (
+                            <div className="mt-2">
+                                <div className="flex gap-1">
                                     {[0, 1, 2, 3].map((i) => (
                                         <div
                                             key={i}
-                                            className={`flex-1 rounded-full transition-colors ${
-                                                i < score ? STRENGTH_COLOR[score] : "bg-transparent"
+                                            className={`h-1 flex-1 rounded-full transition-colors ${
+                                                i <= score ? STRENGTH_COLOR[score] : "bg-zinc-800"
                                             }`}
                                         />
                                     ))}
                                 </div>
-                                <span className="mt-1 block text-xs text-zinc-500">
-                                    {password ? STRENGTH_LABEL[score] : " "}
+                                <span className="mt-1.5 block text-xs text-zinc-500">
+                                    {STRENGTH_LABEL[score]}
                                 </span>
                             </div>
+                        )}
+                    </div>
 
-                            <div>
-                                <label className="block text-sm text-zinc-400 mb-2">
-                                    Repetí la contraseña
-                                </label>
-                                <input
-                                    type="password"
-                                    value={confirm}
-                                    onChange={(e) => setConfirm(e.target.value)}
-                                    className="w-full h-11 bg-zinc-900 border border-zinc-800 rounded-lg px-4 text-sm text-white outline-none transition-colors focus:border-blue-500"
-                                />
-                            </div>
-                        </>
+                    {creating && (
+                        <div>
+                            <label className="block text-sm text-zinc-400 mb-2">
+                                Repetí la contraseña
+                            </label>
+                            <input
+                                type="password"
+                                value={confirm}
+                                onChange={(e) => setConfirm(e.target.value)}
+                                className={inputClass}
+                            />
+                        </div>
                     )}
 
                     {!creating && (
@@ -173,11 +168,7 @@ export default function LockScreen() {
                         disabled={busy}
                         className="w-full h-11 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium inline-flex items-center justify-center gap-2 transition-colors"
                     >
-                        {busy ? (
-                            <Loader2 size={16} className="animate-spin" />
-                        ) : (
-                            <Lock size={16} />
-                        )}
+                        {busy ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}
                         {creating ? "Crear y desbloquear" : "Desbloquear"}
                     </button>
 
