@@ -2,9 +2,13 @@ import { useEffect, useState } from "react";
 
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Settings, Wand2 } from "lucide-react";
 
 import SearchInput from "../ui/SearchInput";
+
+import LockButton from "../security/LockButton";
+import SettingsModal from "../settings/SettingsModal";
+import SecretGenerator from "../dev/SecretGenerator";
 
 const appWindow = getCurrentWindow();
 
@@ -69,6 +73,10 @@ function CloseIcon() {
 export default function Header() {
 
     const [isMaximized, setIsMaximized] = useState(false);
+
+    const [settingsOpen, setSettingsOpen] = useState(false);
+
+    const [genOpen, setGenOpen] = useState(false);
 
     useEffect(() => {
 
@@ -217,6 +225,30 @@ export default function Header() {
             </div>
 
             <div className="flex items-center gap-0.5 pr-1.5 h-full shrink-0">
+
+                <button
+                    onClick={() => setGenOpen(true)}
+                    title="Generador de secretos"
+                    className="w-8 h-8 rounded-md flex items-center justify-center text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200 transition-colors"
+                >
+                    <Wand2 size={13} />
+                </button>
+
+                <button
+                    onClick={() => setSettingsOpen(true)}
+                    title="Ajustes"
+                    className="w-8 h-8 rounded-md flex items-center justify-center text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200 transition-colors"
+                >
+                    <Settings size={13} />
+                </button>
+
+                <LockButton />
+
+                <div className="w-px h-4 bg-zinc-800 mx-1" />
+
+                {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
+
+                {genOpen && <SecretGenerator onClose={() => setGenOpen(false)} />}
 
                 <button
 
